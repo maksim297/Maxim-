@@ -24,7 +24,7 @@ public class BerserkOfGluttony {
                             Tiers.DIAMOND,
                             new Item.Properties().attributes(
                                     SwordItem.createAttributes(
-                                            Tiers.DIAMOND, 5, -2.4F
+                                            Tiers.DIAMOND, 21, -2.4F
                                     )
                             )
                     )
