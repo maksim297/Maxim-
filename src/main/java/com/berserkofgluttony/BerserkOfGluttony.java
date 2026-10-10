@@ -7,14 +7,12 @@ import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tiers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 @Mod(BerserkOfGluttony.MODID)
 public class BerserkOfGluttony {
-
     public static final String MODID = "berserkofgluttony";
 
     public static final DeferredRegister.Items ITEMS =
@@ -32,14 +30,9 @@ public class BerserkOfGluttony {
                     )
             );
 
-    public BerserkOfGluttony(
-            FMLJavaModLoadingContext context) {
-
-        IEventBus modBus = context.getModEventBus();
-
+    public BerserkOfGluttony(IEventBus modBus) {
         ITEMS.register(modBus);
         modBus.addListener(this::addCreative);
-
         System.out.println("Berserk of Gluttony loaded!");
     }
 
