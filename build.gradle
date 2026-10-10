@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+    id 'net.neoforged.gradle.userdev' version '7.0.165'
+}
+group = 'com.berserkofgluttony'
+version = '1.0.0'
+
+base {
+    archivesName = 'berserkofgluttony'
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:21.1.172"
+}
