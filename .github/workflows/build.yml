@@ -1,36 +1,43 @@
+package com.berserkofgluttony;
 
-name: Build Minecraft Mod
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tiers;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.registries.DeferredItem;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
-on:
-  workflow_dispatch:
-  push:
-    branches: ["main"]
+@Mod(BerserkOfGluttony.MODID)
+public class BerserkOfGluttony {
+    public static final String MODID = "berserkofgluttony";
 
-permissions:
-  contents: read
+    public static final DeferredRegister.Items ITEMS =
+            DeferredRegister.createItems(MODID);
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    public static final DeferredItem<SwordItem> GREED =
+            ITEMS.register("greed", () ->
+                    new SwordItem(
+                            Tiers.DIAMOND,
+                            new Item.Properties().attributes(
+                                    SwordItem.createAttributes(
+                                            Tiers.DIAMOND, 5, -2.4F
+                                    )
+                            )
+                    )
+            );
 
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: temurin
+    public BerserkOfGluttony(IEventBus modBus) {
+        ITEMS.register(modBus);
+        modBus.addListener(this::addCreative);
+    }
 
-      - name: Build mod
-        run: |
-          chmod +x gradlew
-          ./gradlew build --no-daemon --max-workers=2 --console=plain
+    private void addCreative(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.COMBAT) {
+            event.accept(GREED);
+        }
+    }
+}
 
-      - name: Upload mod JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: berserkofgluttony-jar
-          path: build/libs/*.jar
-          if-no-files-found: error
-          
