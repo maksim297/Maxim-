@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 public class StatusScreen extends Screen {
 
     public StatusScreen() {
-        super(Component.literal("STATUS"));
+        super(Component.literal("СТАТУС"));
     }
 
     @Override
@@ -20,22 +20,22 @@ public class StatusScreen extends Screen {
         graphics.fill(centerX - 150, centerY - 100,
                 centerX + 150, centerY + 100, 0xE6101020);
 
-        graphics.drawCenteredString(this.font, "STATUS",
+        graphics.drawCenteredString(this.font, "СТАТУС",
                 centerX, centerY - 80, 0xFFFFD700);
 
-        graphics.drawString(this.font, "LEVEL: I",
+        graphics.drawString(this.font, "РІВЕНЬ: I",
                 centerX - 120, centerY - 45, 0xFFFFFFFF);
 
-        graphics.drawString(this.font, "STRENGTH: I",
+        graphics.drawString(this.font, "СИЛА: I",
                 centerX - 120, centerY - 20, 0xFFFFFFFF);
 
-        graphics.drawString(this.font, "AGILITY: I",
+        graphics.drawString(this.font, "СПРИТНІСТЬ: I",
                 centerX - 120, centerY + 5, 0xFFFFFFFF);
 
-        graphics.drawString(this.font, "ENDURANCE: I",
+        graphics.drawString(this.font, "ВИТРИВАЛІСТЬ: I",
                 centerX - 120, centerY + 30, 0xFFFFFFFF);
 
-        graphics.drawString(this.font, "MAGIC: I",
+        graphics.drawString(this.font, "МАГІЯ: I",
                 centerX - 120, centerY + 55, 0xFFFFFFFF);
 
         super.render(graphics, mouseX, mouseY, partialTick);
