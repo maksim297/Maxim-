@@ -104,6 +104,19 @@ public class StatusScreen extends Screen {
                     "Магія: " + stats.getMagic(),
                     left + 14, y + 136, 0xFF55FFAA
             );
+            
+            graphics.drawString(
+                    this.font,
+                    "Клас: Берсерк",
+                    left + 14, y + 154, 0xFFFFD700
+            );
+
+            graphics.drawString(
+                     this.font,
+                   Component.translatable("options.language").getString()
+                   + ": " + Minecraft.getInstance().options.languageCode,
+                   left + 14, y + 172, 0xFF55FFFF
+            );
         }
 
         graphics.drawCenteredString(
