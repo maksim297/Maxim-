@@ -177,8 +177,11 @@ public class BerserkOfGluttony {
 
         RpgStats stats = player.getData(RPG_STATS);
 
+        // 5 очок характеристик за кожен рівень
+        int pointsToAdd = levelsGained * 5;
+
         stats.setStatPoints(
-                stats.getStatPoints() + levelsGained
+                stats.getStatPoints() + pointsToAdd
         );
 
         player.setData(RPG_STATS, stats);
@@ -197,4 +200,4 @@ public class BerserkOfGluttony {
                 )
         );
     }
-}
+            }
