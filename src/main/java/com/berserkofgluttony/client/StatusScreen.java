@@ -76,7 +76,7 @@ public class StatusScreen extends Screen {
             graphics.drawString(
                     this.font,
                     "Броня: " + player.getArmorValue(),
-                    left + 14, y + 36, 0xFFAAAAFF
+                    left + 14, y + 34, 0xFFAAAAFF
             );
 
             graphics.drawString(
