@@ -25,9 +25,9 @@ public class StatusScreen extends Screen {
         super.init();
 
         left = this.width / 2 - 155;
-        top = this.height / 2 - 125;
+        top = this.height / 2 - 165;
         right = this.width / 2 + 155;
-        bottom = this.height / 2 + 145;
+        bottom = this.height / 2 + 165;
 
         int buttonX = right - 78;
         int buttonWidth = 30;
