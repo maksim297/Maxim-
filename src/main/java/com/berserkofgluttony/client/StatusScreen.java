@@ -57,16 +57,14 @@ public class StatusScreen extends Screen {
                      this.font,
                     "Ім'я: " + player.getName().getString(),
                      left + 14, y - 2, 0xFFFFFFFF
-        );
-
-            graphics.drawString(
-                    this.font,
-                    "Здоров'я: " +
-                            String.format(java.util.Locale.ROOT, "%.1f / %.1f",
-                                    player.getHealth(), player.getMaxHealth()),
-                    left + 14, y, 0xFFFF5555
             );
-
+ 
+            graphics.drawString(
+                     this.font,
+                     "Ім'я: " + player.getName().getString(),
+                      left + 14, y - 2, 0xFFFFFFFF
+            );
+            
             graphics.drawString(
                     this.font,
                     "Броня: " + player.getArmorValue(),
