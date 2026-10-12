@@ -52,7 +52,7 @@ public class StatusScreen extends Screen {
                 : null;
 
         if (player != null) {
-            int y = top + 38;
+            int y = top + 52;
             graphics.drawString(
                      this.font,
                     "Ім'я: " + player.getName().getString(),
