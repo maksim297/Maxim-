@@ -113,8 +113,13 @@ public class StatusScreen extends Screen {
 
             graphics.drawString(
                      this.font,
-                   Component.translatable("options.language").getString()
-                   + ": " + Minecraft.getInstance().options.languageCode,
+                    "Мова гри: " + (
+                        
+            Minecraft.getInstance().options.languageCode.startsWith("uk")
+                     ? "Українська"
+                     :   
+            Minecraft.getInstance().options.languageCode
+            ),
                    left + 14, y + 172, 0xFF55FFFF
             );
             graphics.drawString(
