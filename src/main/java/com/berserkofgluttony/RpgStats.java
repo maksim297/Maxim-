@@ -1,16 +1,37 @@
 
 package com.berserkofgluttony;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 public class RpgStats {
-    private static final String TAG = "BerserkRpgStats";
+    public static final Codec<RpgStats> CODEC =
+            RecordCodecBuilder.create(instance -> instance.group(
+                    Codec.INT.fieldOf("Strength")
+                            .forGetter(RpgStats::getStrength),
+                    Codec.INT.fieldOf("Agility")
+                            .forGetter(RpgStats::getAgility),
+                    Codec.INT.fieldOf("Endurance")
+                            .forGetter(RpgStats::getEndurance),
+                    Codec.INT.fieldOf("Magic")
+                            .forGetter(RpgStats::getMagic)
+            ).apply(instance, RpgStats::new));
 
     private int strength = 10;
     private int agility = 10;
     private int endurance = 10;
     private int magic = 10;
+
+    public RpgStats() {
+    }
+
+    public RpgStats(int strength, int agility,
+                    int endurance, int magic) {
+        this.strength = Math.max(0, strength);
+        this.agility = Math.max(0, agility);
+        this.endurance = Math.max(0, endurance);
+        this.magic = Math.max(0, magic);
+    }
 
     public int getStrength() {
         return strength;
@@ -42,19 +63,5 @@ public class RpgStats {
 
     public void setMagic(int value) {
         magic = Math.max(0, value);
-    }
-
-    public void save(CompoundTag tag) {
-        tag.putInt("Strength", strength);
-        tag.putInt("Agility", agility);
-        tag.putInt("Endurance", endurance);
-        tag.putInt("Magic", magic);
-    }
-
-    public void load(CompoundTag tag) {
-        strength = tag.getInt("Strength");
-        agility = tag.getInt("Agility");
-        endurance = tag.getInt("Endurance");
-        magic = tag.getInt("Magic");
     }
 }
