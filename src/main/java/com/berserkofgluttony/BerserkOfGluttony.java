@@ -57,11 +57,8 @@ public class BerserkOfGluttony {
     public BerserkOfGluttony(IEventBus modBus) {
         ITEMS.register(modBus);
         ATTACHMENT_TYPES.register(modBus);
-
         modBus.addListener(this::addCreative);
         modBus.addListener(this::registerPayloads);
-
-        System.out.println("Berserk of Gluttony loaded!");
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
@@ -78,6 +75,12 @@ public class BerserkOfGluttony {
                 StatActionPayload.STREAM_CODEC,
                 BerserkOfGluttony::handleStatAction
         );
+
+        registrar.playToClient(
+                StatSyncPayload.TYPE,
+                StatSyncPayload.STREAM_CODEC,
+                BerserkOfGluttony::handleStatSync
+        );
     }
 
     private static void handleStatAction(
@@ -90,53 +93,79 @@ public class BerserkOfGluttony {
             }
 
             RpgStats stats = player.getData(RPG_STATS);
-
-            int statId = payload.statId();
+            int id = payload.statId();
             int direction = payload.direction();
 
             if (direction != 1 && direction != -1) {
                 return;
             }
 
-            switch (statId) {
-                case 0 -> changeStat(
-                        stats, stats.getStrength(),
-                        direction, 0, stats::setStrength
-                );
-                case 1 -> changeStat(
-                        stats, stats.getAgility(),
-                        direction, 1, stats::setAgility
-                );
-                case 2 -> changeStat(
-                        stats, stats.getEndurance(),
-                        direction, 2, stats::setEndurance
-                );
-                case 3 -> changeStat(
-                        stats, stats.getMagic(),
-                        direction, 3, stats::setMagic
-                );
+            int value = switch (id) {
+                case 0 -> stats.getStrength();
+                case 1 -> stats.getAgility();
+                case 2 -> stats.getEndurance();
+                case 3 -> stats.getMagic();
+                default -> -1;
+            };
+
+            if (value < 10) {
+                return;
+            }
+
+            if (direction == 1 && stats.getStatPoints() > 0) {
+                value++;
+                stats.setStatPoints(stats.getStatPoints() - 1);
+            } else if (direction == -1 && value > 10) {
+                value--;
+                stats.setStatPoints(stats.getStatPoints() + 1);
+            } else {
+                return;
+            }
+
+            switch (id) {
+                case 0 -> stats.setStrength(value);
+                case 1 -> stats.setAgility(value);
+                case 2 -> stats.setEndurance(value);
+                case 3 -> stats.setMagic(value);
                 default -> {
                     return;
                 }
             }
 
             player.setData(RPG_STATS, stats);
+
+            PacketDistributor.sendToPlayer(
+                    player,
+                    new StatSyncPayload(
+                            stats.getStrength(),
+                            stats.getAgility(),
+                            stats.getEndurance(),
+                            stats.getMagic(),
+                            stats.getStatPoints()
+                    )
+            );
         });
     }
 
-    private static void changeStat(
-            RpgStats stats,
-            int current,
-            int direction,
-            int statId,
-            java.util.function.IntConsumer setter
+    private static void handleStatSync(
+            StatSyncPayload payload,
+            IPayloadContext context
     ) {
-        if (direction == 1 && stats.getStatPoints() > 0) {
-            setter.accept(current + 1);
-            stats.setStatPoints(stats.getStatPoints() - 1);
-        } else if (direction == -1 && current > 10) {
-            setter.accept(current - 1);
-            stats.setStatPoints(stats.getStatPoints() + 1);
-        }
-    }      
+        context.enqueueWork(() -> {
+            if (context.player() == null) {
+                return;
+            }
+
+            context.player().setData(
+                    RPG_STATS,
+                    new RpgStats(
+                            payload.strength(),
+                            payload.agility(),
+                            payload.endurance(),
+                            payload.magic(),
+                            payload.statPoints()
+                    )
+            );
+        });
+    }
 }
