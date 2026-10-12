@@ -27,9 +27,9 @@ public class StatusScreen extends Screen {
         graphics.fill(0, 0, w, h, 0xE5101018);
 
         int left = w / 2 - 125;
-        int top = h / 2 - 125;
+        int top = h / 2 - 210;
         int right = w / 2 + 125;
-        int bottom = h / 2 + 125;
+        int bottom = h / 2 + 180;
 
         // Золота рамка та темна панель
         graphics.fill(left, top, right, bottom, 0xFFFFD700);
@@ -53,6 +53,11 @@ public class StatusScreen extends Screen {
 
         if (player != null) {
             int y = top + 38;
+            graphics.drawString(
+                     this.font,
+                    "Ім'я: " + player.getName().getString(),
+                     left + 14, y - 2, 0xFFFFFFFF
+        );
 
             graphics.drawString(
                     this.font,
