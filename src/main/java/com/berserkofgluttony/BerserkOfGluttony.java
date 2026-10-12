@@ -1,4 +1,3 @@
-
 package com.berserkofgluttony;
 
 import java.util.function.Supplier;
@@ -12,7 +11,9 @@ import net.minecraft.world.item.Tiers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -57,8 +58,11 @@ public class BerserkOfGluttony {
     public BerserkOfGluttony(IEventBus modBus) {
         ITEMS.register(modBus);
         ATTACHMENT_TYPES.register(modBus);
+
         modBus.addListener(this::addCreative);
         modBus.addListener(this::registerPayloads);
+
+        NeoForge.EVENT_BUS.addListener(this::onPlayerLevelChange);
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
@@ -93,6 +97,7 @@ public class BerserkOfGluttony {
             }
 
             RpgStats stats = player.getData(RPG_STATS);
+
             int id = payload.statId();
             int direction = payload.direction();
 
@@ -133,17 +138,7 @@ public class BerserkOfGluttony {
             }
 
             player.setData(RPG_STATS, stats);
-
-            PacketDistributor.sendToPlayer(
-                    player,
-                    new StatSyncPayload(
-                            stats.getStrength(),
-                            stats.getAgility(),
-                            stats.getEndurance(),
-                            stats.getMagic(),
-                            stats.getStatPoints()
-                    )
-            );
+            syncStats(player, stats);
         });
     }
 
@@ -167,5 +162,39 @@ public class BerserkOfGluttony {
                     )
             );
         });
+    }
+
+    private void onPlayerLevelChange(PlayerXpEvent.LevelChange event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        int levelsGained = event.getLevels();
+
+        if (levelsGained <= 0) {
+            return;
+        }
+
+        RpgStats stats = player.getData(RPG_STATS);
+
+        stats.setStatPoints(
+                stats.getStatPoints() + levelsGained
+        );
+
+        player.setData(RPG_STATS, stats);
+        syncStats(player, stats);
+    }
+
+    private static void syncStats(ServerPlayer player, RpgStats stats) {
+        PacketDistributor.sendToPlayer(
+                player,
+                new StatSyncPayload(
+                        stats.getStrength(),
+                        stats.getAgility(),
+                        stats.getEndurance(),
+                        stats.getMagic(),
+                        stats.getStatPoints()
+                )
+        );
     }
 }
