@@ -27,9 +27,9 @@ public class StatusScreen extends Screen {
         graphics.fill(0, 0, w, h, 0xE5101018);
 
         int left = w / 2 - 125;
-        int top = h / 2 - 110;
+        int top = h / 2 - 125;
         int right = w / 2 + 125;
-        int bottom = h / 2 + 110;
+        int bottom = h / 2 + 125;
 
         // Золота рамка та темна панель
         graphics.fill(left, top, right, bottom, 0xFFFFD700);
@@ -116,6 +116,11 @@ public class StatusScreen extends Screen {
                    Component.translatable("options.language").getString()
                    + ": " + Minecraft.getInstance().options.languageCode,
                    left + 14, y + 172, 0xFF55FFFF
+            );
+            graphics.drawString(
+                     this.font,
+                     "Навичка: Поглинання",
+                      left + 14, y + 190, 0xFF55FF55
             );
         }
 
