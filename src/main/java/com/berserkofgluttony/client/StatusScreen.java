@@ -1,4 +1,3 @@
-
 package com.berserkofgluttony.client;
 
 import net.minecraft.client.Minecraft;
@@ -28,9 +27,9 @@ public class StatusScreen extends Screen {
         graphics.fill(0, 0, w, h, 0xE5101018);
 
         int left = w / 2 - 125;
-        int top = h / 2 - 90;
+        int top = h / 2 - 110;
         int right = w / 2 + 125;
-        int bottom = h / 2 + 90;
+        int bottom = h / 2 + 110;
 
         // Золота рамка та темна панель
         graphics.fill(left, top, right, bottom, 0xFFFFD700);
@@ -47,15 +46,19 @@ public class StatusScreen extends Screen {
         Minecraft minecraft = Minecraft.getInstance();
         Player player = minecraft.player;
 
+        com.berserkofgluttony.RpgStats stats = player != null
+                ? player.getData(
+                        com.berserkofgluttony.BerserkOfGluttony.RPG_STATS)
+                : null;
+
         if (player != null) {
             int y = top + 38;
 
-            // Реальні показники Minecraft
             graphics.drawString(
                     this.font,
                     "Здоров'я: " +
-                    String.format(java.util.Locale.ROOT, "%.1f / %.1f",
-                            player.getHealth(), player.getMaxHealth()),
+                            String.format(java.util.Locale.ROOT, "%.1f / %.1f",
+                                    player.getHealth(), player.getMaxHealth()),
                     left + 14, y, 0xFFFF5555
             );
 
@@ -74,26 +77,32 @@ public class StatusScreen extends Screen {
             graphics.drawString(
                     this.font,
                     "Досвід: " +
-                    (int) (player.experienceProgress * 100) + "%",
+                            (int) (player.experienceProgress * 100) + "%",
                     left + 14, y + 60, 0xFF55FF55
             );
 
             graphics.drawString(
                     this.font,
-                    "Сила: —",
-                    left + 14, y + 85, 0xFFFF7777
+                    "Сила: " + stats.getStrength(),
+                    left + 14, y + 82, 0xFFFF7777
             );
 
             graphics.drawString(
                     this.font,
-                    "Спритність: —",
-                    left + 14, y + 103, 0xFF55FFFF
+                    "Спритність: " + stats.getAgility(),
+                    left + 14, y + 100, 0xFF55FFFF
             );
 
             graphics.drawString(
                     this.font,
-                    "Магія: —",
-                    left + 14, y + 121, 0xFFCC88FF
+                    "Витривалість: " + stats.getEndurance(),
+                    left + 14, y + 118, 0xFFCC88FF
+            );
+
+            graphics.drawString(
+                    this.font,
+                    "Магія: " + stats.getMagic(),
+                    left + 14, y + 136, 0xFF55FFAA
             );
         }
 
@@ -109,5 +118,5 @@ public class StatusScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
-    }
+    } 
 }
