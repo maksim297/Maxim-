@@ -1,9 +1,12 @@
+
 package com.berserkofgluttony;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 public class RpgStats {
+
+    private static final int BASE_STAT = 10;
 
     public static final Codec<RpgStats> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
@@ -19,10 +22,10 @@ public class RpgStats {
                             .forGetter(RpgStats::getStatPoints)
             ).apply(instance, RpgStats::new));
 
-    private int strength = 10;
-    private int agility = 10;
-    private int endurance = 10;
-    private int magic = 10;
+    private int strength = BASE_STAT;
+    private int agility = BASE_STAT;
+    private int endurance = BASE_STAT;
+    private int magic = BASE_STAT;
     private int statPoints = 0;
 
     public RpgStats() {
@@ -35,10 +38,10 @@ public class RpgStats {
 
     public RpgStats(int strength, int agility,
                     int endurance, int magic, int statPoints) {
-        this.strength = Math.max(0, strength);
-        this.agility = Math.max(0, agility);
-        this.endurance = Math.max(0, endurance);
-        this.magic = Math.max(0, magic);
+        this.strength = Math.max(BASE_STAT, strength);
+        this.agility = Math.max(BASE_STAT, agility);
+        this.endurance = Math.max(BASE_STAT, endurance);
+        this.magic = Math.max(BASE_STAT, magic);
         this.statPoints = Math.max(0, statPoints);
     }
 
@@ -63,19 +66,19 @@ public class RpgStats {
     }
 
     public void setStrength(int value) {
-        strength = Math.max(0, value);
+        strength = Math.max(BASE_STAT, value);
     }
 
     public void setAgility(int value) {
-        agility = Math.max(0, value);
+        agility = Math.max(BASE_STAT, value);
     }
 
     public void setEndurance(int value) {
-        endurance = Math.max(0, value);
+        endurance = Math.max(BASE_STAT, value);
     }
 
     public void setMagic(int value) {
-        magic = Math.max(0, value);
+        magic = Math.max(BASE_STAT, value);
     }
 
     public void setStatPoints(int value) {
