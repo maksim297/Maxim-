@@ -1,203 +1,102 @@
+
 package com.berserkofgluttony;
 
-import java.util.function.Supplier;
-
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.item.Tiers;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.attachment.AttachmentType;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
+public final class StatEffects {
 
-@Mod(BerserkOfGluttony.MODID)
-public class BerserkOfGluttony {
+    private static final ResourceLocation STRENGTH_ID =
+            ResourceLocation.fromNamespaceAndPath(
+                    BerserkOfGluttony.MODID, "strength_damage");
 
-    public static final String MODID = "berserkofgluttony";
+    private static final ResourceLocation AGILITY_ID =
+            ResourceLocation.fromNamespaceAndPath(
+                    BerserkOfGluttony.MODID, "agility_speed");
 
-    public static final DeferredRegister.Items ITEMS =
-            DeferredRegister.createItems(MODID);
+    private static final ResourceLocation ENDURANCE_ID =
+            ResourceLocation.fromNamespaceAndPath(
+                    BerserkOfGluttony.MODID, "endurance_health");
 
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(
-                    NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
-
-    public static final Supplier<AttachmentType<RpgStats>> RPG_STATS =
-            ATTACHMENT_TYPES.register(
-                    "rpg_stats",
-                    () -> AttachmentType.builder(RpgStats::new)
-                            .serialize(RpgStats.CODEC)
-                            .copyOnDeath()
-                            .build()
-            );
-
-    public static final DeferredItem<SwordItem> GREED =
-            ITEMS.register("greed", () ->
-                    new SwordItem(
-                            Tiers.DIAMOND,
-                            new Item.Properties().attributes(
-                                    SwordItem.createAttributes(
-                                            Tiers.DIAMOND, 21, -2.4F
-                                    )
-                            )
-                    )
-            );
-
-    public BerserkOfGluttony(IEventBus modBus) {
-        ITEMS.register(modBus);
-        ATTACHMENT_TYPES.register(modBus);
-
-        modBus.addListener(this::addCreative);
-        modBus.addListener(this::registerPayloads);
-
-        NeoForge.EVENT_BUS.addListener(this::onPlayerLevelChange);
+    private StatEffects() {
     }
 
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.COMBAT) {
-            event.accept(GREED);
+    public static void apply(ServerPlayer player) {
+        RpgStats stats = player.getData(BerserkOfGluttony.RPG_STATS);
+
+        replaceModifier(
+                player.getAttribute(Attributes.ATTACK_DAMAGE),
+                STRENGTH_ID,
+                Math.max(0, stats.getStrength() - 10) * 0.5
+        );
+
+        replaceModifier(
+                player.getAttribute(Attributes.ATTACK_SPEED),
+                AGILITY_ID,
+                Math.max(0, stats.getAgility() - 10) * 0.1
+        );
+
+        AttributeInstance health =
+                player.getAttribute(Attributes.MAX_HEALTH);
+
+        double oldMaxHealth = player.getMaxHealth();
+
+        replaceModifier(
+                health,
+                ENDURANCE_ID,
+                Math.max(0, stats.getEndurance() - 10) * 2.0
+        );
+
+        double newMaxHealth = player.getMaxHealth();
+
+        if (newMaxHealth > oldMaxHealth) {
+            player.setHealth(
+                    (float) Math.min(
+                            newMaxHealth,
+                            player.getHealth()
+                                    + (newMaxHealth - oldMaxHealth)
+                    )
+            );
+        } else if (player.getHealth() > newMaxHealth) {
+            player.setHealth((float) newMaxHealth);
         }
     }
 
-    private void registerPayloads(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar("1");
-
-        registrar.playToServer(
-                StatActionPayload.TYPE,
-                StatActionPayload.STREAM_CODEC,
-                BerserkOfGluttony::handleStatAction
-        );
-
-        registrar.playToClient(
-                StatSyncPayload.TYPE,
-                StatSyncPayload.STREAM_CODEC,
-                BerserkOfGluttony::handleStatSync
-        );
-    }
-
-    private static void handleStatAction(
-            StatActionPayload payload,
-            IPayloadContext context
+    private static void replaceModifier(
+            AttributeInstance attribute,
+            ResourceLocation id,
+            double amount
     ) {
-        context.enqueueWork(() -> {
-            if (!(context.player() instanceof ServerPlayer player)) {
-                return;
-            }
-
-            RpgStats stats = player.getData(RPG_STATS);
-
-            int id = payload.statId();
-            int direction = payload.direction();
-
-            if (direction != 1 && direction != -1) {
-                return;
-            }
-
-            int value = switch (id) {
-                case 0 -> stats.getStrength();
-                case 1 -> stats.getAgility();
-                case 2 -> stats.getEndurance();
-                case 3 -> stats.getMagic();
-                default -> -1;
-            };
-
-            if (value < 10) {
-                return;
-            }
-
-            if (direction == 1 && stats.getStatPoints() > 0) {
-                value++;
-                stats.setStatPoints(stats.getStatPoints() - 1);
-            } else if (direction == -1 && value > 10) {
-                value--;
-                stats.setStatPoints(stats.getStatPoints() + 1);
-            } else {
-                return;
-            }
-
-            switch (id) {
-                case 0 -> stats.setStrength(value);
-                case 1 -> stats.setAgility(value);
-                case 2 -> stats.setEndurance(value);
-                case 3 -> stats.setMagic(value);
-                default -> {
-                    return;
-                }
-            }
-
-            player.setData(RPG_STATS, stats);
-            syncStats(player, stats);
-        });
-    }
-
-    private static void handleStatSync(
-            StatSyncPayload payload,
-            IPayloadContext context
-    ) {
-        context.enqueueWork(() -> {
-            if (context.player() == null) {
-                return;
-            }
-
-            context.player().setData(
-                    RPG_STATS,
-                    new RpgStats(
-                            payload.strength(),
-                            payload.agility(),
-                            payload.endurance(),
-                            payload.magic(),
-                            payload.statPoints()
-                    )
-            );
-        });
-    }
-
-    private void onPlayerLevelChange(PlayerXpEvent.LevelChange event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) {
+        if (attribute == null) {
             return;
         }
 
-        int levelsGained = event.getLevels();
+        attribute.removeModifier(id);
 
-        if (levelsGained <= 0) {
-            return;
+        if (amount > 0) {
+            attribute.addTransientModifier(
+                    new AttributeModifier(
+                            id,
+                            amount,
+                            AttributeModifier.Operation.ADD_VALUE
+                    )
+            );
         }
-
-        RpgStats stats = player.getData(RPG_STATS);
-
-        // 5 очок характеристик за кожен рівень
-        int pointsToAdd = levelsGained * 5;
-
-        stats.setStatPoints(
-                stats.getStatPoints() + pointsToAdd
-        );
-
-        player.setData(RPG_STATS, stats);
-        syncStats(player, stats);
     }
 
-    private static void syncStats(ServerPlayer player, RpgStats stats) {
-        PacketDistributor.sendToPlayer(
-                player,
-                new StatSyncPayload(
-                        stats.getStrength(),
-                        stats.getAgility(),
-                        stats.getEndurance(),
-                        stats.getMagic(),
-                        stats.getStatPoints()
-                )
-        );
+    public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            apply(player);
+        }
     }
-            }
+
+    public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            apply(player);
+        }
+    }
+}
