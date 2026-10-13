@@ -14,7 +14,6 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -111,20 +110,21 @@ public class BerserkOfGluttony {
 
             int value = switch (id) {
                 case 0 -> stats.getStrength();
-                case 1 -> stats.getAgility();
-                case 2 -> stats.getEndurance();
-                case 3 -> stats.getMagic();
+                case 1 -> stats.getEndurance();
+                case 2 -> stats.getPerception();
+                case 3 -> stats.getAgility();
+                case 4 -> stats.getIntelligence();
                 default -> -1;
             };
 
-            if (value < 10) {
+            if (value < RpgStats.BASE_STAT) {
                 return;
             }
 
             if (direction == 1 && stats.getStatPoints() > 0) {
                 value++;
                 stats.setStatPoints(stats.getStatPoints() - 1);
-            } else if (direction == -1 && value > 10) {
+            } else if (direction == -1 && value > RpgStats.BASE_STAT) {
                 value--;
                 stats.setStatPoints(stats.getStatPoints() + 1);
             } else {
@@ -133,18 +133,17 @@ public class BerserkOfGluttony {
 
             switch (id) {
                 case 0 -> stats.setStrength(value);
-                case 1 -> stats.setAgility(value);
-                case 2 -> stats.setEndurance(value);
-                case 3 -> stats.setMagic(value);
+                case 1 -> stats.setEndurance(value);
+                case 2 -> stats.setPerception(value);
+                case 3 -> stats.setAgility(value);
+                case 4 -> stats.setIntelligence(value);
                 default -> {
                     return;
                 }
             }
 
             player.setData(RPG_STATS, stats);
-
             StatEffects.apply(player);
-
             syncStats(player, stats);
         });
     }
@@ -162,9 +161,10 @@ public class BerserkOfGluttony {
                     RPG_STATS,
                     new RpgStats(
                             payload.strength(),
-                            payload.agility(),
                             payload.endurance(),
-                            payload.magic(),
+                            payload.perception(),
+                            payload.agility(),
+                            payload.intelligence(),
                             payload.statPoints()
                     )
             );
@@ -183,12 +183,7 @@ public class BerserkOfGluttony {
         }
 
         RpgStats stats = player.getData(RPG_STATS);
-
-        int pointsToAdd = levelsGained * 5;
-
-        stats.setStatPoints(
-                stats.getStatPoints() + pointsToAdd
-        );
+        stats.setStatPoints(stats.getStatPoints() + levelsGained * 5);
 
         player.setData(RPG_STATS, stats);
         syncStats(player, stats);
@@ -199,9 +194,10 @@ public class BerserkOfGluttony {
                 player,
                 new StatSyncPayload(
                         stats.getStrength(),
-                        stats.getAgility(),
                         stats.getEndurance(),
-                        stats.getMagic(),
+                        stats.getPerception(),
+                        stats.getAgility(),
+                        stats.getIntelligence(),
                         stats.getStatPoints()
                 )
         );
