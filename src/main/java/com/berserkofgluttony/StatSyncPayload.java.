@@ -8,9 +8,10 @@ import net.minecraft.resources.ResourceLocation;
 
 public record StatSyncPayload(
         int strength,
-        int agility,
         int endurance,
-        int magic,
+        int perception,
+        int agility,
+        int intelligence,
         int statPoints
 ) implements CustomPacketPayload {
 
@@ -24,12 +25,14 @@ public record StatSyncPayload(
             STREAM_CODEC = StreamCodec.of(
                     (buffer, payload) -> {
                         buffer.writeVarInt(payload.strength());
-                        buffer.writeVarInt(payload.agility());
                         buffer.writeVarInt(payload.endurance());
-                        buffer.writeVarInt(payload.magic());
+                        buffer.writeVarInt(payload.perception());
+                        buffer.writeVarInt(payload.agility());
+                        buffer.writeVarInt(payload.intelligence());
                         buffer.writeVarInt(payload.statPoints());
                     },
                     buffer -> new StatSyncPayload(
+                            buffer.readVarInt(),
                             buffer.readVarInt(),
                             buffer.readVarInt(),
                             buffer.readVarInt(),
