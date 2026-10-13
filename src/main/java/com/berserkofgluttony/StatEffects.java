@@ -22,16 +22,45 @@ public final class StatEffects {
             ResourceLocation.fromNamespaceAndPath(
                     BerserkOfGluttony.MODID, "endurance_health");
 
+    private static final ResourceLocation PERCEPTION_ID =
+            ResourceLocation.fromNamespaceAndPath(
+                    BerserkOfGluttony.MODID, "perception_damage");
+
+    private static final ResourceLocation INTELLIGENCE_ID =
+            ResourceLocation.fromNamespaceAndPath(
+                    BerserkOfGluttony.MODID, "intelligence_damage");
+
     private StatEffects() {
     }
 
     public static void apply(ServerPlayer player) {
         RpgStats stats = player.getData(BerserkOfGluttony.RPG_STATS);
 
+        double strengthBonus =
+                Math.max(0, stats.getStrength() - 10) * 0.5;
+
+        double perceptionBonus =
+                Math.max(0, stats.getPerception() - 10) * 0.7;
+
+        double intelligenceBonus =
+                Math.max(0, stats.getIntelligence() - 10) * 0.5;
+
         replaceModifier(
                 player.getAttribute(Attributes.ATTACK_DAMAGE),
                 STRENGTH_ID,
-                Math.max(0, stats.getStrength() - 10) * 0.5
+                strengthBonus
+        );
+
+        replaceModifier(
+                player.getAttribute(Attributes.ATTACK_DAMAGE),
+                PERCEPTION_ID,
+                perceptionBonus
+        );
+
+        replaceModifier(
+                player.getAttribute(Attributes.ATTACK_DAMAGE),
+                INTELLIGENCE_ID,
+                intelligenceBonus
         );
 
         replaceModifier(
@@ -54,13 +83,10 @@ public final class StatEffects {
         double newMaxHealth = player.getMaxHealth();
 
         if (newMaxHealth > oldMaxHealth) {
-            player.setHealth(
-                    (float) Math.min(
-                            newMaxHealth,
-                            player.getHealth()
-                                    + (newMaxHealth - oldMaxHealth)
-                    )
-            );
+            player.setHealth((float) Math.min(
+                    newMaxHealth,
+                    player.getHealth() + newMaxHealth - oldMaxHealth
+            ));
         } else if (player.getHealth() > newMaxHealth) {
             player.setHealth((float) newMaxHealth);
         }
