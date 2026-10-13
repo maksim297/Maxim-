@@ -3,6 +3,7 @@ package com.berserkofgluttony;
 
 import java.util.function.Supplier;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
@@ -115,14 +116,18 @@ public class BerserkOfGluttony {
                 return;
             }
 
-            RpgStats stats = player.getData(RPG_STATS);
-
             int id = payload.statId();
             int direction = payload.direction();
+
+            if (id < 0 || id > 4) {
+                return;
+            }
 
             if (direction != 1 && direction != -1) {
                 return;
             }
+
+            RpgStats stats = player.getData(RPG_STATS);
 
             int value = switch (id) {
                 case 0 -> stats.getStrength();
@@ -133,10 +138,6 @@ public class BerserkOfGluttony {
                 default -> -1;
             };
 
-            if (value < RpgStats.BASE_STAT) {
-                return;
-            }
-
             if (direction == 1) {
                 if (stats.getStatPoints() <= 0) {
                     return;
@@ -144,7 +145,6 @@ public class BerserkOfGluttony {
 
                 value++;
                 stats.setStatPoints(stats.getStatPoints() - 1);
-
             } else {
                 if (value <= RpgStats.BASE_STAT) {
                     return;
@@ -214,6 +214,25 @@ public class BerserkOfGluttony {
 
         StatEffects.apply(player);
         syncStats(player, stats);
+    }
+
+    public static void sendStatAction(int statId, int direction) {
+        if (statId < 0 || statId > 4) {
+            return;
+        }
+
+        if (direction != 1 && direction != -1) {
+            return;
+        }
+
+        PacketDistributor.sendToServer(
+                new StatActionPayload(statId, direction)
+        );
+    }
+
+    public static void openStatusScreen() {
+        // Викликати цей метод із клієнтського коду.
+        // Сам екран відкривається у ClientEvents.java.
     }
 
     private static void syncStats(ServerPlayer player, RpgStats stats) {
