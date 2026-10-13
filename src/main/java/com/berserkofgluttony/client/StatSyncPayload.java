@@ -1,45 +1,39 @@
+
 package com.berserkofgluttony;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 public record StatSyncPayload(
         int strength,
-        int agility,
         int endurance,
-        int magic,
+        int perception,
+        int agility,
+        int intelligence,
         int statPoints
 ) implements CustomPacketPayload {
 
     public static final Type<StatSyncPayload> TYPE =
             new Type<>(
                     ResourceLocation.fromNamespaceAndPath(
-                            BerserkOfGluttony.MODID,
+                            "berserkofgluttony",
                             "stat_sync"
                     )
             );
 
-    public static final StreamCodec<
-            RegistryFriendlyByteBuf,
-            StatSyncPayload
-    > STREAM_CODEC = StreamCodec.of(
-            (buffer, payload) -> {
-                buffer.writeVarInt(payload.strength());
-                buffer.writeVarInt(payload.agility());
-                buffer.writeVarInt(payload.endurance());
-                buffer.writeVarInt(payload.magic());
-                buffer.writeVarInt(payload.statPoints());
-            },
-            buffer -> new StatSyncPayload(
-                    buffer.readVarInt(),
-                    buffer.readVarInt(),
-                    buffer.readVarInt(),
-                    buffer.readVarInt(),
-                    buffer.readVarInt()
-            )
-    );
+    public static final StreamCodec<RegistryFriendlyByteBuf, StatSyncPayload>
+            STREAM_CODEC = StreamCodec.composite(
+                    ByteBufCodecs.VAR_INT, StatSyncPayload::strength,
+                    ByteBufCodecs.VAR_INT, StatSyncPayload::endurance,
+                    ByteBufCodecs.VAR_INT, StatSyncPayload::perception,
+                    ByteBufCodecs.VAR_INT, StatSyncPayload::agility,
+                    ByteBufCodecs.VAR_INT, StatSyncPayload::intelligence,
+                    ByteBufCodecs.VAR_INT, StatSyncPayload::statPoints,
+                    StatSyncPayload::new
+            );
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
