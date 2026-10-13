@@ -14,6 +14,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -33,7 +34,9 @@ public class BerserkOfGluttony {
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
             DeferredRegister.create(
-                    NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
+                    NeoForgeRegistries.ATTACHMENT_TYPES,
+                    MODID
+            );
 
     public static final Supplier<AttachmentType<RpgStats>> RPG_STATS =
             ATTACHMENT_TYPES.register(
@@ -50,7 +53,9 @@ public class BerserkOfGluttony {
                             Tiers.DIAMOND,
                             new Item.Properties().attributes(
                                     SwordItem.createAttributes(
-                                            Tiers.DIAMOND, 21, -2.4F
+                                            Tiers.DIAMOND,
+                                            21,
+                                            -2.4F
                                     )
                             )
                     )
@@ -63,7 +68,9 @@ public class BerserkOfGluttony {
         modBus.addListener(this::addCreative);
         modBus.addListener(this::registerPayloads);
 
+        NeoForge.EVENT_BUS.addListener(this::onPlayerLogin);
         NeoForge.EVENT_BUS.addListener(this::onPlayerLevelChange);
+
         NeoForge.EVENT_BUS.addListener(StatEffects::onLogin);
         NeoForge.EVENT_BUS.addListener(StatEffects::onRespawn);
     }
@@ -88,6 +95,15 @@ public class BerserkOfGluttony {
                 StatSyncPayload.STREAM_CODEC,
                 BerserkOfGluttony::handleStatSync
         );
+    }
+
+    private void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        RpgStats stats = player.getData(RPG_STATS);
+        syncStats(player, stats);
     }
 
     private static void handleStatAction(
@@ -121,14 +137,21 @@ public class BerserkOfGluttony {
                 return;
             }
 
-            if (direction == 1 && stats.getStatPoints() > 0) {
+            if (direction == 1) {
+                if (stats.getStatPoints() <= 0) {
+                    return;
+                }
+
                 value++;
                 stats.setStatPoints(stats.getStatPoints() - 1);
-            } else if (direction == -1 && value > RpgStats.BASE_STAT) {
+
+            } else {
+                if (value <= RpgStats.BASE_STAT) {
+                    return;
+                }
+
                 value--;
                 stats.setStatPoints(stats.getStatPoints() + 1);
-            } else {
-                return;
             }
 
             switch (id) {
@@ -143,6 +166,7 @@ public class BerserkOfGluttony {
             }
 
             player.setData(RPG_STATS, stats);
+
             StatEffects.apply(player);
             syncStats(player, stats);
         });
@@ -165,8 +189,7 @@ public class BerserkOfGluttony {
                             payload.perception(),
                             payload.agility(),
                             payload.intelligence(),
-                            payload.statPoints(),
-                            0
+                            payload.statPoints()
                     )
             );
         });
@@ -188,6 +211,7 @@ public class BerserkOfGluttony {
         stats.distributeAutomaticPoints(levelsGained * 5);
 
         player.setData(RPG_STATS, stats);
+
         StatEffects.apply(player);
         syncStats(player, stats);
     }
