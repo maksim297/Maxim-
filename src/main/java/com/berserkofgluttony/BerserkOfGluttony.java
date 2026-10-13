@@ -15,10 +15,10 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -165,7 +165,8 @@ public class BerserkOfGluttony {
                             payload.perception(),
                             payload.agility(),
                             payload.intelligence(),
-                            payload.statPoints()
+                            payload.statPoints(),
+                            0
                     )
             );
         });
@@ -183,9 +184,11 @@ public class BerserkOfGluttony {
         }
 
         RpgStats stats = player.getData(RPG_STATS);
-        stats.setStatPoints(stats.getStatPoints() + levelsGained * 5);
+
+        stats.distributeAutomaticPoints(levelsGained * 5);
 
         player.setData(RPG_STATS, stats);
+        StatEffects.apply(player);
         syncStats(player, stats);
     }
 
